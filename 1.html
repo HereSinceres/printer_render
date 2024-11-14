@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canvas 文本渲染器</title>
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width="140" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const ZERO = '\u200B'
+    const WRAP = '\n'
+    const HORIZON_TAB = '\t'
+    const NBSP = '\u0020'
+
+
+    const data = [
+      { type: "text", fontSize: 12, lineHeight: 1.5, color: "red", text: "第一段文本，如果超出需要换行", textAlign: "left" },
+      { type: "text", fontSize: 12, lineHeight: 1.5, color: "blue", text: "\u200B", textAlign: "center" },
+      { type: "text", fontSize: 12, lineHeight: 1.5, color: "blue", text: "第二段文本，如果超出需要换行", textAlign: "center" },
+      { type: "text", fontSize: 12, lineHeight: 1.5, color: "green", text: "第三段文本，特别长的单词Supercalifragilisticexpialidocious示例", textAlign: "right" }
+    ];
+
+    function renderText(ctx, data, maxWidth, startX
+    ) {
+
+      let y = 0; // 初始 y 位置
+
+      data.forEach(item => {
+        if (item.type === "text") {
+
+          ctx.font = `${item.fontSize}px sans-serif`;
+          ctx.fillStyle = item.color;
+          ctx.textAlign = item.textAlign; // 设置文本对齐
+          const lineHeight = item.fontSize * item.lineHeight;
+          let offset;
+          if (item.textAlign === "center") offset = maxWidth / 2;
+          else if (item.textAlign === "right") offset = maxWidth - 0;
+          else offset = 0; // 默认为左对齐
+          x = offset + startX;
+
+          y += (lineHeight); // 调整 y 位置，换行
+
+
+          let words = item.text.split(" ");
+          let line = "";
+
+          words.forEach(word => {
+            let testLine = line + word + " ";
+            let testWidth = ctx.measureText(testLine).width;
+
+            // 如果单词本身超过了最大宽度，逐字符处理
+            if (ctx.measureText(word).width > maxWidth) {
+              for (let char of word) {
+                let testCharLine = line + char;
+                if (ctx.measureText(testCharLine).width > maxWidth) {
+                  ctx.fillText(line, x, y);
+                  line = char; // 开始新行
+                  y += lineHeight;
+                } else {
+                  line = testCharLine;
+                }
+              }
+              line += " "; // 在单词末尾添加空格
+            }
+            // 如果当前行宽度超过最大宽度
+            else if (testWidth > maxWidth) {
+              ctx.fillText(line, x, y);
+              line = word + " ";
+              y += lineHeight;
+            } else {
+              line = testLine;
+            }
+          });
+
+          // 绘制最后一行
+          ctx.fillText(line, x, y);
+
+        }
+      });
+    }
+
+    renderText(ctx, data, 40, 20); // 渲染文本，最大宽度为580
+  </script>
+</body>
+
+</html>
